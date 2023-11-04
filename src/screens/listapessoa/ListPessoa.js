@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import React, { useEffect, useState } from 'react'
 import { FlatList, StyleSheet, View } from 'react-native'
 import { Button, Card, Dialog, FAB, MD3Colors, Portal, Text } from 'react-native-paper'
 import Toast from 'react-native-toast-message'
@@ -6,45 +7,38 @@ import Toast from 'react-native-toast-message'
 
 export default function ListPessoa({ navigation, route }) {
 
-  const [pessoas, setPessoas] = useState([
-    {
-      nome: 'Fernando Lima',
-      idade: '2',
-      altura: '178',
-      peso: '80'
-    },
-
-    {
-      nome: 'Gabriel Marques',
-      idade: '16',
-      altura: '173',
-      peso: '69'
-    },
-
-    {
-      nome: 'Joãozin',
-      idade: '24',
-      altura: '173',
-      peso: '85'
-    }
-  ])
+  const [pessoas, setPessoas] = useState([])
   const [showModalExcluirUsuario, setShowModalExcluirUsuario] = useState(false)
   const [pessoaASerExcluida, setPessoaASerExcluida] = useState(null)
+
+
+  useEffect(() => {
+    loadPessoas()
+  }, [])
+
+  async function loadPessoas() {
+    const response = await AsyncStorage.getItem('pessoas')
+    console.log("🚀 ~ file: ListaPessoasAsyncStorage.js:21 ~ loadPessoas ~ response:", response)
+    const pessoasStorage = response ? JSON.parse(response) : []
+    setPessoas(pessoasStorage)
+  }
+
+
 
   const showModal = () => setShowModalExcluirUsuario(true);
 
   const hideModal = () => setShowModalExcluirUsuario(false);
 
-
-  function adicionarPessoa(pessoa) {
+  async function adicionarPessoa(pessoa) {
     let novaListaPessoas = pessoas
     novaListaPessoas.push(pessoa)
-    setPessoa(novaListaPessoas)
+    await AsyncStorage.setItem('pessoas', JSON.stringify(novaListaPessoas));
+    setPessoas(novaListaPessoas)
   }
 
-  function editarPessoa(pessoaAntiga, novosDados) {
-    console.log('PESSOA ANTIGA -> ', pessoaAntiga)
-    console.log('DADOS NOVOS -> ', novosDados)
+  async function editarPessoa(pessoaAntiga, novosDados) {
+    console.log('Antiga Pessoa -> ', pessoaAntiga)
+    console.log('Novos Dados -> ', novosDados)
 
     const novaListaPessoas = pessoas.map(pessoa => {
       if (pessoa == pessoaAntiga) {
@@ -54,16 +48,18 @@ export default function ListPessoa({ navigation, route }) {
       }
     })
 
+    await AsyncStorage.setItem('pessoas', JSON.stringify(novaListaPessoas))
     setPessoas(novaListaPessoas)
 
   }
 
-  function excluirPessoa(pessoa) {
-    const novaListaPessoa = pessoas.filter(p => p !== pessoa)
-    setPessoas(novaListaPessoa)
+  async function excluirPessoa(pessoa) {
+    const novaListaPessoas = pessoas.filter(p => p !== pessoa)
+    await AsyncStorage.setItem('pessoas', JSON.stringify(novaListaPessoas))
+    setPessoas(novaListaPessoas)
     Toast.show({
       type: 'success',
-      text1: 'Pessoa excluida com sucesso!'
+      text1: 'Excluido com sucesso!'
     })
   }
 
@@ -84,7 +80,7 @@ export default function ListPessoa({ navigation, route }) {
   return (
     <View style={styles.container}>
 
-      <Text variant='titleLarge' style={styles.title}>Lista de Pessoas</Text>
+      <Text variant='titleLarge' style={styles.title} >Lista de Pessoas</Text>
 
       <FlatList
         style={styles.list}
@@ -124,13 +120,16 @@ export default function ListPessoa({ navigation, route }) {
           </Card>
         )}
       />
-      
+
+      {/* Botão Flutuante */}
       <FAB
         icon="plus"
         style={styles.fab}
         onPress={() => navigation.push('FormPessoa', { acao: adicionarPessoa })}
       />
-      
+
+
+      {/* Modal Excluir Usuário */}
       <Portal>
         <Dialog visible={showModalExcluirUsuario} onDismiss={hideModal}>
           <Dialog.Title>Atenção!</Dialog.Title>
@@ -172,7 +171,7 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flexDirection: 'row',
-    backgroundColor: MD3Colors.primary70,
+    backgroundColor: MD3Colors.primary80,
     borderWidth: 2,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,

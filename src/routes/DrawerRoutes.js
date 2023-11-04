@@ -15,6 +15,7 @@ export default function DrawerRoutes() {
             <Drawer.Screen name="Carros" component={Carros} />
             <Drawer.Screen name="Pessoas" component={StackPessoa} />
             <Drawer.Screen name="PessoasAsyncStorage" component={StackPessoaAsync} />
+            <Drawer.Screen name="Formulario" component={StackPessoa} />
         </Drawer.Navigator>
     )
 }
